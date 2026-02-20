@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>AE Core — Get Verified</title>
+  <style>
+    body{font-family:Arial;margin:0;background:#fafafa}
+    header{padding:22px 18px;background:#111;color:#fff}
+    nav a{color:#fff;margin-right:14px;text-decoration:none;font-weight:600}
+    main{max-width:900px;margin:0 auto;padding:18px}
+    .card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;margin:12px 0}
+    input,select,textarea{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:10px}
+    .btn{background:#111;color:#fff;padding:10px 14px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+    small{color:#555}
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin:0;font-size:22px">Get Verified</h1>
+    <nav style="margin-top:10px">
+      <a href="index.html">Home</a>
+      <a href="resources.html">Resources</a>
+      <a href="verify.html">Get Verified</a>
+      <a href="policies.html">Policies</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Verified Pro (Target: $19.99/mo)</h2>
+      <p>Verification profile + contact form + premium templates. <b>No explicit content hosted.</b></p>
+      <small>Payment setup can be added later. For now this form collects interest.</small>
+    </div>
+
+    <div class="card">
+      <h2>Create your profile</h2>
+      <form>
+        <label>Type</label>
+        <select>
+          <option>Creator</option>
+          <option>Venue</option>
+          <option>Service Provider</option>
+        </select>
+
+        <label>Display name</label>
+        <input placeholder="Business or creator name"/>
+
+        <label>City / State</label>
+        <input placeholder="Hammond, IN"/>
+
+        <label>Contact email</label>
+        <input placeholder="name@email.com"/>
+
+        <label>What do you want verified?</label>
+        <textarea rows="4" placeholder="Identity, business details, venue listing..."></textarea>
+
+        <button class="btn" type="button" onclick="alert('Submitted! (demo)')">Submit</button>
+      </form>
+      <p><small>We remove listings that solicit illegal activity and prohibit harassment/doxxing.</small></p>
+    </div>
+  </main>
+</body>
+</html>
