@@ -60,3 +60,45 @@
   </footer>
 </body>
 </html>
+<a class="btn" href="verify.html">Create a Verification Profile</a>
+<button class="btn" style="margin-left:10px" onclick="testPayment()">Test Payment (Pi)</button>
+
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>
+  // Initialize Pi SDK
+  Pi.init({ version: "2.0", sandbox: true });
+
+  async function testPayment() {
+    try {
+      const paymentData = {
+        amount: 0.01,
+        memo: "AE Core setup test",
+        metadata: { purpose: "setup-test" }
+      };
+
+      const paymentCallbacks = {
+        onReadyForServerApproval: function (paymentId) {
+          // For now, just log it. In production you’d approve on your server.
+          console.log("Ready for server approval:", paymentId);
+        },
+        onReadyForServerCompletion: function (paymentId, txid) {
+          console.log("Ready for completion:", paymentId, txid);
+          alert("Payment initiated. Return to Pi checklist and refresh Step 10.");
+        },
+        onCancel: function (paymentId) {
+          console.log("Payment cancelled:", paymentId);
+          alert("Payment cancelled.");
+        },
+        onError: function (error, payment) {
+          console.log("Payment error:", error, payment);
+          alert("Payment error. Try again.");
+        }
+      };
+
+      await Pi.createPayment(paymentData, paymentCallbacks);
+    } catch (e) {
+      console.log(e);
+      alert("Could not start Pi payment. Make sure you're in Pi Browser.");
+    }
+  }
+</script>
