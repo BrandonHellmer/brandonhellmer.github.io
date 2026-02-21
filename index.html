@@ -17,6 +17,7 @@
     ul{margin:8px 0 0 18px}
   </style>
 </head>
+
 <body>
   <header>
     <h1>AE Core — Safety & Verification Hub</h1>
@@ -39,6 +40,10 @@
 
       <a class="btn" href="verify.html">Create a Verification Profile</a>
       <button class="btn" style="margin-left:10px" onclick="testPayment()">Test Payment (Pi)</button>
+
+      <p class="muted" style="margin-top:12px">
+        This button is only for Step 10 validation. Use it from the Pi sandbox launcher URL.
+      </p>
     </div>
 
     <div class="card">
@@ -58,60 +63,65 @@
   </main>
 
   <footer>
-    AE Core — Safety & Verification • Contact: <span class="muted">add your email later</span>
+    AE Core — Safety & Verification
   </footer>
 
   <!-- Pi SDK + Payment test -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
-    // Only use sandbox mode when running inside the Pi sandbox launcher URL
-    <script>
-  const isSandbox = window.location.hostname.includes("sandbox.minepi.com");
-  if (window.Pi) Pi.init({ version: "2.0", sandbox: isSandbox });
-
-  async function testPayment() {
-    try {
-      if (!window.Pi) {
-        alert("Pi SDK not detected. Open using the sandbox URL shown in Step 6.");
-        return;
-      }
-
-      // 1) Authenticate first (required for payments)
-      const scopes = ["payments"]; // keep it minimal
-      const auth = await Pi.authenticate(scopes, (payment) => {
-        // onIncompletePaymentFound callback (required by SDK)
-        console.log("Incomplete payment found:", payment);
-      });
-      console.log("Authenticated:", auth);
-
-      // 2) Then create the payment
-      const paymentData = {
-        amount: 0.01,
-        memo: "AE Core setup test",
-        metadata: { purpose: "setup-test" }
-      };
-
-      const paymentCallbacks = {
-        onReadyForServerApproval: (paymentId) => console.log("Ready for server approval:", paymentId),
-        onReadyForServerCompletion: (paymentId, txid) => {
-          console.log("Ready for completion:", paymentId, txid);
-          alert("Payment flow started. Go back to Pi checklist and refresh Step 10.");
-        },
-        onCancel: (paymentId) => alert("Payment cancelled."),
-        onError: (error, payment) => {
-          console.log("Payment error:", error, payment);
-          alert("Payment error. Try again.");
-        }
-      };
-
-      await Pi.createPayment(paymentData, paymentCallbacks);
-
-    } catch (e) {
-      console.log(e);
-      alert("Payment failed. Re-open using the sandbox URL (Step 6) and try again.");
+    // Force sandbox mode for Step 10 testing.
+    // After Step 10 is complete, we can change this to sandbox: false for production.
+    if (window.Pi) {
+      Pi.init({ version: "2.0", sandbox: true });
     }
-  }
-</script>
+
+    async function testPayment() {
+      try {
+        // If Pi SDK is not injected, the app was not opened via the Pi sandbox launcher.
+        if (!window.Pi) {
+          alert("Pi SDK not injected. Open this app using the sandbox launcher URL from Step 6.");
+          return;
+        }
+
+        // Authenticate before attempting payment (required)
+        await Pi.authenticate(["payments"], (payment) => {
+          console.log("Incomplete payment found:", payment);
+        });
+
+        // Create a tiny test payment
+        const paymentData = {
+          amount: 0.01,
+          memo: "AE Core setup test",
+          metadata: { purpose: "setup-test" }
+        };
+
+        const paymentCallbacks = {
+          onReadyForServerApproval: (paymentId) => {
+            console.log("Ready for server approval:", paymentId);
+            // Some setups require a backend server to approve/complete.
+            // If Pi requires it, we will add the backend next.
+          },
+          onReadyForServerCompletion: (paymentId, txid) => {
+            console.log("Ready for completion:", paymentId, txid);
+            alert("Payment started. Go back to the Pi checklist and refresh Step 10.");
+          },
+          onCancel: (paymentId) => {
+            console.log("Payment cancelled:", paymentId);
+            alert("Payment cancelled.");
+          },
+          onError: (error, payment) => {
+            console.log("Payment error:", error, payment);
+            alert("Payment error: " + (error?.message || JSON.stringify(error)));
+          }
+        };
+
+        await Pi.createPayment(paymentData, paymentCallbacks);
+
+      } catch (e) {
+        console.log("Caught error:", e);
+        alert("Caught error: " + (e?.message || JSON.stringify(e)));
+      }
+    }
+  </script>
 </body>
 </html>
-
