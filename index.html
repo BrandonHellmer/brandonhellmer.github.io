@@ -99,9 +99,62 @@
         }
 
         debug("Authenticating…");
-        await Pi.authenticate(["payments"], (payment) => {
-          console.log("Incomplete payment:", payment);
-        });
+        <script>
+  // ... keep your existing code above
+
+  async function testPayment() {
+    try {
+      if (!window.Pi) {
+        alert("Pi SDK not injected. Open using sandbox launcher URL from Step 6.");
+        return;
+      }
+
+      debug("Authenticating… (waiting for Pi prompt)");
+
+      // Force a real consent prompt
+      const scopes = ["username", "payments"];
+
+      // Add a timeout so it doesn’t hang forever
+      const authPromise = Pi.authenticate(scopes, (payment) => {
+        console.log("Incomplete payment:", payment);
+      });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Auth timed out (no prompt). Close Pi Browser and reopen sandbox URL.")), 15000)
+      );
+
+      await Promise.race([authPromise, timeoutPromise]);
+
+      debug("✅ Auth OK. Creating payment…");
+
+      const paymentData = {
+        amount: 0.01,
+        memo: "AE Core setup test",
+        metadata: { purpose: "setup-test" }
+      };
+
+      const paymentCallbacks = {
+        onReadyForServerApproval: (paymentId) => debug("⚠️ Ready for server approval: " + paymentId),
+        onReadyForServerCompletion: (paymentId, txid) => {
+          debug("✅ Ready for completion. paymentId=" + paymentId + " txid=" + txid);
+          alert("Payment started. Return to checklist and refresh Step 10.");
+        },
+        onCancel: () => debug("❌ Payment cancelled."),
+        onError: (error) => {
+          debug("❌ Payment error: " + (error?.message || JSON.stringify(error)));
+          alert("Payment error: " + (error?.message || JSON.stringify(error)));
+        }
+      };
+
+      await Pi.createPayment(paymentData, paymentCallbacks);
+      debug("✅ Pi.createPayment called. Waiting for callbacks…");
+
+    } catch (e) {
+      debug("❌ Caught error: " + (e?.message || JSON.stringify(e)));
+      alert("Caught error: " + (e?.message || JSON.stringify(e)));
+    }
+  }
+</script>
         debug("✅ Auth OK. Creating payment…");
 
         const paymentData = {
@@ -138,3 +191,4 @@
   </script>
 </body>
 </html>
+
