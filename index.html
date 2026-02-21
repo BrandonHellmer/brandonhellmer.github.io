@@ -65,49 +65,53 @@
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
     // Only use sandbox mode when running inside the Pi sandbox launcher URL
-    const isSandbox = window.location.hostname.includes("sandbox.minepi.com");
-    if (window.Pi) {
-      Pi.init({ version: "2.0", sandbox: isSandbox });
-    }
+    <script>
+  const isSandbox = window.location.hostname.includes("sandbox.minepi.com");
+  if (window.Pi) Pi.init({ version: "2.0", sandbox: isSandbox });
 
-    async function testPayment() {
-      try {
-        if (!window.Pi) {
-          alert("Pi SDK not detected. Open this from the Pi sandbox URL or Pi app launch.");
-          return;
-        }
-
-        const paymentData = {
-          amount: 0.01,
-          memo: "AE Core setup test",
-          metadata: { purpose: "setup-test" }
-        };
-
-        const paymentCallbacks = {
-          onReadyForServerApproval: function (paymentId) {
-            console.log("Ready for server approval:", paymentId);
-          },
-          onReadyForServerCompletion: function (paymentId, txid) {
-            console.log("Ready for completion:", paymentId, txid);
-            alert("Payment started. Return to the Pi checklist and refresh Step 10.");
-          },
-          onCancel: function (paymentId) {
-            console.log("Payment cancelled:", paymentId);
-            alert("Payment cancelled.");
-          },
-          onError: function (error, payment) {
-            console.log("Payment error:", error, payment);
-            alert("Payment error. Try again.");
-          }
-        };
-
-        await Pi.createPayment(paymentData, paymentCallbacks);
-
-      } catch (e) {
-        console.log(e);
-        alert("Could not start Pi payment. Open using the sandbox URL shown in Step 6.");
+  async function testPayment() {
+    try {
+      if (!window.Pi) {
+        alert("Pi SDK not detected. Open using the sandbox URL shown in Step 6.");
+        return;
       }
+
+      // 1) Authenticate first (required for payments)
+      const scopes = ["payments"]; // keep it minimal
+      const auth = await Pi.authenticate(scopes, (payment) => {
+        // onIncompletePaymentFound callback (required by SDK)
+        console.log("Incomplete payment found:", payment);
+      });
+      console.log("Authenticated:", auth);
+
+      // 2) Then create the payment
+      const paymentData = {
+        amount: 0.01,
+        memo: "AE Core setup test",
+        metadata: { purpose: "setup-test" }
+      };
+
+      const paymentCallbacks = {
+        onReadyForServerApproval: (paymentId) => console.log("Ready for server approval:", paymentId),
+        onReadyForServerCompletion: (paymentId, txid) => {
+          console.log("Ready for completion:", paymentId, txid);
+          alert("Payment flow started. Go back to Pi checklist and refresh Step 10.");
+        },
+        onCancel: (paymentId) => alert("Payment cancelled."),
+        onError: (error, payment) => {
+          console.log("Payment error:", error, payment);
+          alert("Payment error. Try again.");
+        }
+      };
+
+      await Pi.createPayment(paymentData, paymentCallbacks);
+
+    } catch (e) {
+      console.log(e);
+      alert("Payment failed. Re-open using the sandbox URL (Step 6) and try again.");
     }
-  </script>
+  }
+</script>
 </body>
 </html>
+
