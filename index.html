@@ -15,7 +15,6 @@
     .muted{color:#555}
     footer{padding:18px;text-align:center;color:#666}
     ul{margin:8px 0 0 18px}
-    code{background:#f3f3f3;padding:2px 6px;border-radius:6px}
   </style>
 </head>
 
@@ -32,14 +31,10 @@
   </header>
 
   <main>
-    <!-- DEBUG CARD -->
-    <div class="card">
+    <!-- DEBUG CARD (shows what Pi Browser is actually providing) -->
+    <div class="card" id="debugCard">
       <h2>Debug</h2>
       <div id="debugText" class="muted">Loading…</div>
-      <div class="muted" style="margin-top:10px">
-        Step 10 only works when opened via the Pi sandbox launcher URL (Step 6), e.g.
-        <code>https://sandbox.minepi.com/app/...</code>
-      </div>
     </div>
 
     <div class="card">
@@ -50,10 +45,10 @@
       </p>
 
       <a class="btn" href="verify.html">Create a Verification Profile</a>
-      <button class="btn" style="margin-left:10px" onclick="alert('CLICK WORKS'); testPayment();">Test Payment (Pi)</button>
+      <button class="btn" style="margin-left:10px" onclick="testPayment()">Test Payment (Pi)</button>
 
       <p class="muted" style="margin-top:12px">
-        This button is only for Step 10 validation.
+        This button is only for Step 10 validation. Use it from the Pi sandbox launcher URL (Step 6).
       </p>
     </div>
 
@@ -77,40 +72,37 @@
     AE Core — Safety & Verification
   </footer>
 
-  <!-- Pi SDK + Payment test -->
+  <!-- Pi SDK + Payment test (Sandbox) -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
-    function setDebug(msg) {
+    const debug = (msg) => {
       console.log(msg);
       const el = document.getElementById("debugText");
       if (el) el.innerText = msg;
-    }
+    };
 
-    // Initial debug status
-    setDebug("Page loaded. Checking for Pi SDK injection…");
+    debug("Page loaded. Checking Pi SDK…");
 
-    // Force sandbox mode for Step 10 testing (your app is Testnet)
     if (!window.Pi) {
-      setDebug("❌ window.Pi NOT found. This is NOT a Pi app session. Open this page via the Pi sandbox launcher URL from Step 6.");
+      debug("❌ window.Pi NOT found. This is NOT a Pi app session. Open via the sandbox launcher URL.");
     } else {
-      setDebug("✅ window.Pi found. Initializing Pi SDK (sandbox=true)…");
+      debug("✅ window.Pi found. Initializing (sandbox=true) …");
       Pi.init({ version: "2.0", sandbox: true });
-      setDebug("✅ Pi SDK initialized. Ready to authenticate/pay.");
+      debug("✅ Pi.init done. Ready.");
     }
 
     async function testPayment() {
       try {
         if (!window.Pi) {
-          alert("Pi SDK not injected. Open using the sandbox launcher URL from Step 6.");
-          setDebug("❌ Payment blocked: window.Pi not found.");
+          alert("Pi SDK not injected. Open using sandbox launcher URL from Step 6.");
           return;
         }
 
-        setDebug("Authenticating (payments scope)…");
+        debug("Authenticating…");
         await Pi.authenticate(["payments"], (payment) => {
-          console.log("Incomplete payment found:", payment);
+          console.log("Incomplete payment:", payment);
         });
-        setDebug("✅ Auth OK. Creating payment…");
+        debug("✅ Auth OK. Creating payment…");
 
         const paymentData = {
           amount: 0.01,
@@ -120,34 +112,29 @@
 
         const paymentCallbacks = {
           onReadyForServerApproval: (paymentId) => {
-            setDebug("⚠️ Ready for server approval: " + paymentId + " (This may require a small backend to approve/complete.)");
+            debug("⚠️ Ready for server approval: " + paymentId);
           },
           onReadyForServerCompletion: (paymentId, txid) => {
-            setDebug("✅ Ready for completion. paymentId=" + paymentId + " txid=" + txid);
-            alert("Payment flow started. Go back to Pi checklist and refresh Step 10.");
+            debug("✅ Ready for completion. paymentId=" + paymentId + " txid=" + txid);
+            alert("Payment started. Return to checklist and refresh Step 10.");
           },
-          onCancel: (paymentId) => {
-            setDebug("❌ Payment cancelled. paymentId=" + paymentId);
-            alert("Payment cancelled.");
+          onCancel: () => {
+            debug("❌ Payment cancelled.");
           },
-          onError: (error, payment) => {
-            const msg = error?.message || JSON.stringify(error);
-            setDebug("❌ Payment error: " + msg);
-            alert("Payment error: " + msg);
+          onError: (error) => {
+            debug("❌ Payment error: " + (error?.message || JSON.stringify(error)));
+            alert("Payment error: " + (error?.message || JSON.stringify(error)));
           }
         };
 
         await Pi.createPayment(paymentData, paymentCallbacks);
-        setDebug("✅ Pi.createPayment called. Waiting for Pi callbacks…");
+        debug("✅ Pi.createPayment called. Waiting for callbacks…");
 
       } catch (e) {
-        const msg = e?.message || JSON.stringify(e);
-        setDebug("❌ Caught error: " + msg);
-        alert("Caught error: " + msg);
+        debug("❌ Caught error: " + (e?.message || JSON.stringify(e)));
+        alert("Caught error: " + (e?.message || JSON.stringify(e)));
       }
     }
   </script>
 </body>
 </html>
-
-
